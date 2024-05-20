@@ -33,15 +33,15 @@ namespace IngestionServices
             var outputStreamContainer = _blobServiceClient.GetBlobContainerClient(_configuration["AZURE_STORAGE_TARGET_CONTAINER_NAME"]);
             await outputStreamContainer.CreateIfNotExistsAsync();
 
-
             var inputContainer = _blobServiceClient.GetBlobContainerClient(_configuration["AZURE_STORAGE_CSV_CONTAINER_NAME"]);
             var response = await inputContainer.GetBlobClient(_configuration["AZURE_STORAGE_CSV_FILE_NAME"]).DownloadAsync();
+
             using (var reader = new StreamReader(response.Value.Content))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                var records = csv.GetRecords<dynamic>();
- 
-                foreach (var record in records)
+                var records = csv.GetRecords<dynamic>().ToList();
+
+                Parallel.ForEach(records, async (record) =>
                 {
                     string fileName = $"{Guid.NewGuid()}.json";
                     var sb = new StringBuilder();
@@ -55,13 +55,13 @@ namespace IngestionServices
                         content = sb.ToString(),
                     };
                     string json = JsonConvert.SerializeObject(targetSchema);
-   
+
                     BlobClient outputBlobClient = outputStreamContainer.GetBlobClient(fileName);
                     using (var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json)))
                     {
                         await outputBlobClient.UploadAsync(ms, true);
                     }
-                }
+                });
             }
 
             var httpResponse = req.CreateResponse(HttpStatusCode.OK);
