@@ -47,6 +47,9 @@ namespace IngestionServices
                 {
                     string fileName = $"{Guid.NewGuid()}.json";
                     var sb = new StringBuilder();
+                    
+                    sb.AppendLine($"Account: {record.CorporateAccountCpId}");
+                    sb.AppendLine($"Site: {record.SiteCpId}");
                     sb.AppendLine($"AssetName: {record.AssetName}");
                     sb.AppendLine($"AssetTypeName: {record.AssetTypeName}");
                     sb.AppendLine($"ActionImpact: {record.ActionImpact}");
@@ -66,9 +69,7 @@ namespace IngestionServices
 
                     if (records.IndexOf(record) % 100 == 0)
                     {
-                        sw.Stop();
-                        _logger.LogInformation($"Processed {records.IndexOf(record)} records. ElapsedMilliseconds: {sw.ElapsedMilliseconds}");
-                        sw.Restart();
+                        _logger.LogInformation($"Processed {records.IndexOf(record)} records. ElapsedSeconds: {sw.ElapsedMilliseconds / 1000}");
                     }
                 }
             }
