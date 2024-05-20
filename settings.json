@@ -1,0 +1,11 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "AZURE_STORAGE_TARGET_CONTAINER_NAME": "",
+    "AZURE_STORAGE_CSV_CONTAINER_NAME": "",
+    "AZURE_STORAGE_CSV_FILE_NAME": "",
+    "AZURE_STORAGE_CONNECTION_STRING": ""
+  }
+}
