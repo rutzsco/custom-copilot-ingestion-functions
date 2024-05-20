@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Formats.Asn1;
 using System.Globalization;
 using System.Net;
@@ -29,7 +30,8 @@ namespace IngestionServices
         public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
         {
             _logger.LogInformation("C# HTTP trigger function processed a request.");
-
+            var sw = new Stopwatch();
+            sw.Start();          
             var outputStreamContainer = _blobServiceClient.GetBlobContainerClient(_configuration["AZURE_STORAGE_TARGET_CONTAINER_NAME"]);
             await outputStreamContainer.CreateIfNotExistsAsync();
 
@@ -41,7 +43,7 @@ namespace IngestionServices
             {
                 var records = csv.GetRecords<dynamic>().ToList();
 
-                Parallel.ForEach(records, async (record) =>
+                foreach (var record in records)
                 {
                     string fileName = $"{Guid.NewGuid()}.json";
                     var sb = new StringBuilder();
@@ -61,7 +63,14 @@ namespace IngestionServices
                     {
                         await outputBlobClient.UploadAsync(ms, true);
                     }
-                });
+
+                    if (records.IndexOf(record) % 100 == 0)
+                    {
+                        sw.Stop();
+                        _logger.LogInformation($"Processed {records.IndexOf(record)} records. ElapsedMilliseconds: {sw.ElapsedMilliseconds}");
+                        sw.Restart();
+                    }
+                }
             }
 
             var httpResponse = req.CreateResponse(HttpStatusCode.OK);
